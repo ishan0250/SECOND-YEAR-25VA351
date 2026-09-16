@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+    body {
+        font-family: Arial, sans-serif;
+        background: linear-gradient(135deg, #d4fc79, #96e6a1);
+        margin: 0;
+        padding: 0;
+    }
+
+    #form {
+        width: 350px;
+        margin: 80px auto;
+        border: none;
+        border-radius: 20px;
+        padding: 30px;
+        background: #ffffff;
+        color: #333;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        text-align: center;
+    }
+
+    #h1 {
+        margin-bottom: 20px;
+        color: #4CAF50;
+        font-size: 24px;
+    }
+        p {
+        font-size: 18px;
+        margin: 15px 0 5px;
+        color: #555;
+    }
+
+    input {
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        outline: none;
+        transition: 0.3s;
+    }
+
+    input:focus {
+        border-color: #4CAF50;
+        box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
+    }
+
+    </style>
+</head>
+<body>
+    <div id="form">
+        <h1 id="h1">Keyboard Events</h1>
+    </div>
+    <p>Onkeydown</p>
+    <input type="text" onkeydown="document.getElementById('form').style.background=this.value">
+    <p>Onkeyup</p>
+    <input type="text" onkeyup="document.getElementById('form').style.background=this.value">
+    <p>Onkeypress</p>
+    <input type="text" onkeypress="document.getElementById('form').style.background=this.value">
+</body>
+</html>

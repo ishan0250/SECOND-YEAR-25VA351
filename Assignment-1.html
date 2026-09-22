@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timed Quiz Assignment</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;      
+            height: 100vh;   
+        }
+        .quiz-box {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            width: 380px;
+            position: relative;
+        }
+        .timer-box {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #d9534f;
+            background: #fdf2f2;
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: 1px solid #f5c6cb;
+            text-align: center;
+            margin-bottom: 15px;
+            display: none;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin-top: 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.1s, background-color 0.2s;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .option {
+            margin: 8px 0;
+            padding: 10px;
+            display: block;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .key-hint {
+            font-size: 0.8rem;
+            color: #6c757d;
+            float: right;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="quiz-box">
+        <h2>Quiz - 5 Questions</h2>
+        <div id="student-info"></div>
+        <div id="timer" class="timer-box">Time Left: <span id="timeLeft">30</span>s</div>
+        
+        <button class="btn" id="takeQuizBtn" onclick="enterDetails()">Take Quiz</button>
+        <button class="btn" id="startBtn" onclick="startQuiz()" style="display:none;">Start Quiz</button>
+
+        <form id="quizForm" style="margin-top:20px;"></form>
+    </div>
+
+    <script>
+        let userDetails = {};
+        let score = 0;
+        let currentQuestion = 0;
+        let timerInterval = null;
+        let timeLeft = 30;
+
+        const quizData = [
+            {
+                question: "Q1: What is the capital of India?",
+                options: ["Mumbai", "Delhi", "Kolkata", "Chennai"],
+                answer: "Delhi"
+            },
+            {
+                question: "Q2: Which planet is known as the Red Planet?",
+                options: ["Earth", "Mars", "Jupiter", "Venus"],
+                answer: "Mars"
+            },
+            {
+                question: "Q3: What is the largest ocean on Earth?",
+                options: ["Atlantic Ocean", "Indian Ocean", "Arctic Ocean", "Pacific Ocean"],
+                answer: "Pacific Ocean"
+            },
+            {
+                question: "Q4: Who wrote the Indian National Anthem?",
+                options: ["Rabindranath Tagore", "Bankim Chandra Chatterjee", "Sarojini Naidu", "Mahatma Gandhi"],
+                answer: "Rabindranath Tagore"
+            },
+            {
+                question: "Q5: Which is the longest river in the world?",
+                options: ["Amazon River", "Nile River", "Yingtze River", "Ganga"],
+                answer: "Nile River"
+            }
+        ];
+
+        function enterDetails() {
+            userDetails.name = prompt("Enter your name:");
+            userDetails.branch = prompt("Enter your branch:");
+            userDetails.rollno = prompt("Enter roll number:");
+
+            if (userDetails.name && userDetails.branch && userDetails.rollno) {
+                document.getElementById("student-info").innerHTML = `
+                    <p><strong>Name:</strong> ${userDetails.name}</p>
+                    <p><strong>Branch:</strong> ${userDetails.branch}</p>
+                    <p><strong>Roll No:</strong> ${userDetails.rollno}</p>
+                `;
+                document.getElementById("takeQuizBtn").style.display = "none";
+                document.getElementById("startBtn").style.display = "inline-block";
+            } else {
+                alert("Please fill in all details to proceed.");
+            }
+        }
+
+        function startQuiz() {
+            document.getElementById("startBtn").style.display = "none";
+            document.getElementById("timer").style.display = "block";
+            document.addEventListener("keydown", handleKeyPress);
+            
+            showQuestion();
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timeLeft = 30;
+            document.getElementById("timeLeft").innerText = timeLeft;
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById("timeLeft").innerText = timeLeft;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    alert("⏰ Time's up for this question!");
+                    autoSubmitAnswer();
+                }
+            }, 1000);
+        }
+
+        function showQuestion() {
+            startTimer();
+
+            let q = quizData[currentQuestion];
+            let form = document.getElementById("quizForm");
+
+            let optionsHTML = q.options.map((opt, index) => `
+                <label class="option" id="opt-label-${index}" 
+                       onmouseover="highlightOption(this)" 
+                       onmouseleave="resetOption(this)">
+                    <input type="radio" name="answer" value="${opt}" id="opt-${index}"> 
+                    ${opt}
+                    <span class="key-hint">[Press ${index + 1}]</span>
+                </label>
+            `).join('');
+
+            form.innerHTML = `
+                <h3>${q.question}</h3>
+                ${optionsHTML}
+                <button type="button" class="btn" id="nextBtn" 
+                        onclick="submitAnswer()" 
+                        onmousedown="buttonPress(this)" 
+                        onmouseup="buttonRelease(this)">Next (Press Enter)</button>
+            `;
+        }
+
+        // --- Mouse Event Handlers ---
+        function highlightOption(element) {
+            element.style.backgroundColor = "#e8f0fe";
+            element.style.borderColor = "#007bff";
+        }
+
+        function resetOption(element) {
+            let radio = element.querySelector("input[type='radio']");
+            if (!radio.checked) {
+                element.style.backgroundColor = "transparent";
+                element.style.borderColor = "#ddd";
+            }
+        }
+
+        function buttonPress(btn) {
+            btn.style.transform = "scale(0.95)";
+        }
+
+        function buttonRelease(btn) {
+            btn.style.transform = "scale(1)";
+        }
+
+        // --- Keyboard Event Handler ---
+        function handleKeyPress(event) {
+            // Numbers 1-4 or Numpad 1-4 for picking options
+            if (event.key >= "1" && event.key <= "4") {
+                let index = parseInt(event.key) - 1;
+                let radio = document.getElementById(`opt-${index}`);
+                if (radio) {
+                    radio.checked = true;
+                    
+                    // Reset all option label styles
+                    document.querySelectorAll(".option").forEach(lbl => resetOption(lbl));
+                    // Highlight selected label
+                    highlightOption(document.getElementById(`opt-label-${index}`));
+                }
+            }
+
+            // Enter key submits the question
+            if (event.key === "Enter") {
+                event.preventDefault(); // Prevents accidental page reload
+                let nextBtn = document.getElementById("nextBtn");
+                if (nextBtn) {
+                    nextBtn.click();
+                }
+            }
+        }
+
+        function submitAnswer() {
+            let selected = document.querySelector('input[name="answer"]:checked');
+            
+            if (!selected) {
+                alert("Please select an option or press 1-4!");
+                return;
+            }
+
+            if (selected.value === quizData[currentQuestion].answer) {
+                score++;
+            }
+
+            advanceQuestion();
+        }
+
+        function autoSubmitAnswer() {
+            let selected = document.querySelector('input[name="answer"]:checked');
+            if (selected && selected.value === quizData[currentQuestion].answer) {
+                score++;
+            }
+            advanceQuestion();
+        }
+
+        function advanceQuestion() {
+            clearInterval(timerInterval);
+            currentQuestion++;
+
+            if (currentQuestion < quizData.length) {
+                showQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            clearInterval(timerInterval);
+            document.removeEventListener("keydown", handleKeyPress); // Clean up keyboard listener
+            document.getElementById("timer").style.display = "none";
+
+            let form = document.getElementById("quizForm");
+            form.innerHTML = `
+                <h3>Quiz Finished!</h3>
+                <p>Congratulations <strong>${userDetails.name}</strong>,</p>
+                <p>Your Score: <strong>${score} / ${quizData.length}</strong></p>
+            `;
+        }
+    </script>
+
+</body>
+</html>
